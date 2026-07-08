@@ -7,38 +7,41 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/react/18.2.0/umd/react.production.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/react-dom/18.2.0/umd/react-dom.production.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/babel-standalone/7.23.2/babel.min.js"></script>
-<link href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;500&family=Inter:wght@400;600;700&display=swap" rel="stylesheet" />
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600;700&display=swap" rel="stylesheet" />
 <style>
   *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
-  html, body, #root { height: 100%; background: #ffffff; font-family: 'Inter', sans-serif; }
-  ::-webkit-scrollbar { width: 6px; height: 6px; }
-  ::-webkit-scrollbar-track { background: transparent; }
-  ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
-  
-  @keyframes fadeIn { from { opacity: 0; transform: translateY(4px); } to { opacity: 1; transform: translateY(0); } }
-  .fade-in { animation: fadeIn 0.2s ease forwards; }
-  
-  button { cursor: pointer; font-family: inherit; border: none; outline: none; transition: transform 0.1s, opacity 0.15s; }
-  button:active { transform: scale(0.97); }
-  button:disabled { opacity: 0.6; cursor: not-allowed; transform: none; }
-  
-  textarea { -webkit-tap-highlight-color: transparent; font-family: 'Fira Code', monospace; }
+  html, body, #root { height: 100%; background: #0d1117; }
+  ::-webkit-scrollbar { width: 4px; }
+  ::-webkit-scrollbar-track { background: #0d1117; }
+  ::-webkit-scrollbar-thumb { background: #30363d; border-radius: 4px; }
+  @keyframes fadeIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+  @keyframes shimmer { 0%,100% { opacity: 0.5; } 50% { opacity: 1; } }
+  .fade-in { animation: fadeIn 0.3s ease forwards; }
+  .shimmer { animation: shimmer 1.4s ease infinite; }
+  button { cursor: pointer; font-family: inherit; -webkit-tap-highlight-color: transparent; }
+  button:active { transform: scale(0.97); opacity: 0.8; }
+  textarea { -webkit-tap-highlight-color: transparent; font-family: 'JetBrains Mono', monospace; }
   select { cursor: pointer; font-family: inherit; outline: none; }
 
   /* Mobile sidebar overlay */
-  .sidebar-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 50; }
+  .sidebar-overlay {
+    display: none;
+    position: fixed; inset: 0; background: rgba(0,0,0,0.7); z-index: 10;
+  }
   .sidebar-overlay.open { display: block; }
 
-  .sidebar {
-    position: fixed; left: -280px; top: 0; bottom: 0; width: 260px;
-    background: #ffffff; border-right: 1px solid #e2e8f0; z-index: 60;
-    transition: left 0.3s ease; display: flex; flex-direction: column;
+  @media (max-width: 700px) {
+    .sidebar {
+      position: fixed !important;
+      left: -260px !important;
+      top: 0; bottom: 0;
+      z-index: 20;
+      transition: left 0.25s ease;
+    }
+    .sidebar.open { left: 0 !important; }
+    .menu-btn { display: flex !important; }
   }
-  .sidebar.open { left: 0; }
-
-  /* Inline code styling matching DataCamp */
-  code { background: #2d3748; padding: 2px 6px; border-radius: 4px; font-family: 'Fira Code', monospace; font-size: 0.9em; color: #e2e8f0; }
-
+  .menu-btn { display: none; align-items: center; justify-content: center; width: 34px; height: 34px; background: #21262d; border: none; border-radius: 8px; color: #c9d1d9; font-size: 16px; }
 </style>
 </head>
 <body>
@@ -49,31 +52,57 @@ const { useState, useEffect, useRef, useCallback } = React;
 const OPENROUTER_KEY = "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";
 
 const CURRICULUM = [
-  { id: 0, topic: "Variables & Print", desc: "Store data & print it" },
-  { id: 1, topic: "Strings", desc: "Text manipulation" },
-  { id: 2, topic: "Numbers & Math", desc: "Arithmetic & types" },
-  { id: 3, topic: "Lists", desc: "Collections & indexing" },
-  { id: 4, topic: "Conditionals", desc: "if/elif/else logic" },
-  { id: 5, topic: "Loops", desc: "for & while loops" },
-  { id: 6, topic: "Functions", desc: "Reusable code blocks" },
+  { id: 0, topic: "Variables & Print", icon: "📦", color: "#4ade80", desc: "Store data & print it" },
+  { id: 1, topic: "Strings", icon: "🔤", color: "#60a5fa", desc: "Text manipulation" },
+  { id: 2, topic: "Numbers & Math", icon: "🔢", color: "#f472b6", desc: "Arithmetic & types" },
+  { id: 3, topic: "Lists", icon: "📋", color: "#fb923c", desc: "Collections & indexing" },
+  { id: 4, topic: "Conditionals", icon: "🔀", color: "#a78bfa", desc: "if/elif/else logic" },
+  { id: 5, topic: "Loops", icon: "🔄", color: "#34d399", desc: "for & while loops" },
+  { id: 6, topic: "Functions", icon: "⚙️", color: "#fbbf24", desc: "Reusable code blocks" },
+  { id: 7, topic: "Dictionaries", icon: "🗂️", color: "#f87171", desc: "Key-value stores" },
+  { id: 8, topic: "Comprehensions", icon: "⚡", color: "#38bdf8", desc: "Compact list syntax" },
+  { id: 9, topic: "Error Handling", icon: "🛡️", color: "#c084fc", desc: "try/except blocks" },
+  { id: 10, topic: "OOP", icon: "🏗️", color: "#4ade80", desc: "Classes & objects" },
 ];
 
 async function callOpenRouter(prompt, selectedModel, jsonMode = false) {
   try {
-    const body = { model: selectedModel, messages: [{ role: "user", content: prompt }], temperature: 0.7, max_tokens: 1500 };
-    if (jsonMode) body.response_format = { type: "json_object" };
+    const url = "https://openrouter.ai/api/v1/chat/completions";
+    const body = {
+      model: selectedModel,
+      messages: [{ role: "user", content: prompt }],
+      temperature: 0.8,
+      max_tokens: 2048
+    };
 
-    const res = await fetch("https://openrouter.ai/api/v1/chat/completions", {
+    // OpenRouter JSON mode support varies by model, but we pass it for standard support
+    if (jsonMode) {
+      body.response_format = { type: "json_object" };
+    }
+
+    const res = await fetch(url, {
       method: "POST",
-      headers: { "Content-Type": "application/json", "Authorization": `Bearer ${OPENROUTER_KEY}` },
+      headers: { 
+        "Content-Type": "application/json",
+        "Authorization": `Bearer ${OPENROUTER_KEY}`,
+        "HTTP-Referer": window.location.href, // Recommended for OpenRouter
+        "X-Title": "PyTeach AI" // Recommended for OpenRouter
+      },
       body: JSON.stringify(body),
     });
     
     const data = await res.json();
     const text = data.choices?.[0]?.message?.content || "";
-    if (jsonMode) return JSON.parse(text.replace(/```json\n?|\n?```/g, "").trim());
+    
+    if (jsonMode) {
+      // Strip markdown code blocks if the model included them despite json_object mode
+      return JSON.parse(text.replace(/```json\n?|\n?```/g, "").trim());
+    }
     return text;
-  } catch (e) { return null; }
+  } catch (e) { 
+    console.error("OpenRouter API Error:", e);
+    return null; 
+  }
 }
 
 async function runPython(code) {
@@ -81,13 +110,20 @@ async function runPython(code) {
     const res = await fetch("https://emkc.org/api/v2/piston/execute", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ language: "python", version: "3.10.0", files: [{ content: code }] }),
+      body: JSON.stringify({
+        language: "python", version: "3.10.0",
+        files: [{ content: code }], stdin: "", run_timeout: 5000,
+      }),
     });
     const data = await res.json();
     return { stdout: data.run?.stdout || "", stderr: data.run?.stderr || "" };
   } catch {
-    return { stdout: "", stderr: "Connection error." };
+    return { stdout: "", stderr: "Could not connect to code runner." };
   }
+}
+
+function SkeletonLine({ w = "100%", h = 14, mb = 10 }) {
+  return <div className="shimmer" style={{ width: w, height: h, marginBottom: mb, borderRadius: 6, background: "#21262d" }} />;
 }
 
 function App() {
@@ -97,238 +133,381 @@ function App() {
   const [code, setCode]               = useState("");
   const [output, setOutput]           = useState(null);
   const [feedback, setFeedback]       = useState(null);
-  
-  // UI States
+  const [hint, setHint]               = useState(null);
+  const [hintLevel, setHintLevel]     = useState(0);
+  const [loadTask, setLoadTask]       = useState(false);
+  const [loadRun, setLoadRun]         = useState(false);
+  const [completedTopics, setCompletedTopics] = useState(new Set());
+  const [tasksDone, setTasksDone]     = useState({});
+  const [streak, setStreak]           = useState(0);
+  const [totalSolved, setTotalSolved] = useState(0);
   const [sidebarOpen, setSidebarOpen] = useState(false);
-  const [instOpen, setInstOpen]       = useState(true);
-  const [consoleOpen, setConsoleOpen] = useState(false);
-  const [loadState, setLoadState]     = useState(""); // "task", "run", "submit", ""
   
+  // Changed default model to one known for fast, solid JSON formatting
   const [model, setModel]             = useState("openai/gpt-4o-mini"); 
   const textareaRef = useRef(null);
 
   const generateTask = useCallback(async (tIdx, tNum, currentModel) => {
-    setLoadState("task");
-    setFeedback(null); setOutput(null); setConsoleOpen(false); setInstOpen(true);
-    
+    setLoadTask(true);
+    setFeedback(null);
+    setOutput(null);
+    setHint(null);
+    setHintLevel(0);
     const topic = CURRICULUM[tIdx];
-    const prompt = `You are a strict technical instructor. Generate micro-task ${tNum}/3 for Python topic: "${topic.topic}". 
-Crucial: The task must be EXTREMELY simple and beginner-friendly, exactly like a DataCamp exercise.
+    const diff = tNum === 1 ? "easy (beginner-friendly)" : tNum === 2 ? "medium (requires thought)" : "challenging (tests real understanding)";
+    const prompt = `You are an expert Python teacher. Generate task ${tNum}/3 for topic: "${topic.topic}". Difficulty: ${diff}.
 
-Return ONLY valid JSON:
+Return ONLY valid JSON (no markdown, no extra text):
 {
-  "instructions": [
-    "Instruction step 1 (use backticks for variable names/code). e.g., 'Create a variable `savings` with the value of `100`.'",
-    "Instruction step 2 (optional). e.g., 'Check out this variable by typing `print(savings)`.'"
-  ],
-  "starterCode": "# Create a variable savings\\n\\n\\n# Print out savings\\n",
-  "hint": "One simple sentence telling them exactly what to type if they are stuck.",
-  "checkDescription": "What must the code do to pass? (e.g., 'Must define savings and print it')"
-}`;
+  "title": "short catchy task title (max 6 words)",
+  "conceptBadge": "core concept in 3 words",
+  "conceptExplanation": "One sentence 'aha moment' explaining the concept.",
+  "description": "Exact task. What to write, what input, what output expected. 2-3 sentences.",
+  "example": "Concrete example:\\nInput: ...\\nOutput: ...\\n(or what to print)",
+  "starterCode": "Helpful starter code with guide comments. 4-8 lines.",
+  "hint1": "Gentle nudge. Don't give the answer. Point a direction.",
+  "hint2": "Bigger hint with approach or partial pseudocode.",
+  "checkDescription": "Plain English: what must the code do to be marked correct?"
+}
+
+Make tasks practical and satisfying. Ideas per topic:
+- Variables & Print: personalized greeting → swap variables → input() usage
+- Strings: reverse string → count vowels → build initials from full name
+- Numbers: celsius to fahrenheit → simple interest → check even/odd with input
+- Lists: find max manually → remove duplicates → rotate list by n
+- Conditionals: grade calculator → FizzBuzz-lite → rock paper scissors logic
+- Loops: multiplication table → sum of digits → print pyramid pattern
+- Functions: factorial → fibonacci → mini calculator with 4 operations
+- Dictionaries: word frequency counter → phone book → invert a dict
+- Comprehensions: squares list → filter evens → flatten nested list
+- Error Handling: safe divide → validate age input → file-not-found handler
+- OOP: BankAccount class → Student with GPA → simple Stack class`;
 
     const result = await callOpenRouter(prompt, currentModel, true);
-    if (result && result.instructions) {
+    if (result) {
       setTask(result);
-      setCode(result.starterCode || "\n");
+      setCode(result.starterCode || "# Write your code here\n");
     } else {
-      setTask({ instructions: ["Failed to load task. Please check API key or model."], starterCode: "" });
+      setTask({ title: "API Error", description: "Could not load task. Check OpenRouter API or model compatibility.", example: "", starterCode: "# Error loading task\n", conceptBadge: "Error", conceptExplanation: "", checkDescription: "" });
+      setCode("# Error loading task\n");
     }
-    setLoadState("");
+    setLoadTask(false);
   }, []);
 
   useEffect(() => { generateTask(0, 1, model); }, []);
 
-  const handleRun = async () => {
-    if (!code.trim() || loadState) return;
-    setLoadState("run");
-    const result = await runPython(code);
-    setOutput(result);
-    setConsoleOpen(true);
-    setLoadState("");
+  const handleModelChange = async (e) => {
+    const nextModel = e.target.value;
+    setModel(nextModel);
+    await generateTask(topicIdx, taskNum, nextModel);
   };
 
-  const handleSubmit = async () => {
-    if (!code.trim() || loadState) return;
-    setLoadState("submit");
-    
-    // Auto-run first to get output for the AI to check
+  const handleRun = async () => {
+    if (!code.trim() || loadRun) return;
+    setLoadRun(true);
+    setFeedback(null);
     const result = await runPython(code);
     setOutput(result);
-    setConsoleOpen(true);
 
-    const evalPrompt = `Evaluate this Python code based on the instructions.
-INSTRUCTIONS: ${task?.instructions.join(" ")}
-CODE:
+    const evalPrompt = `You are an encouraging Python teacher evaluating a student's code.
+
+TASK: ${task?.description}
+WHAT CORRECT CODE SHOULD DO: ${task?.checkDescription}
+EXAMPLE: ${task?.example}
+
+STUDENT CODE:
 \`\`\`python
 ${code}
 \`\`\`
-OUTPUT:
-${result.stdout}
-${result.stderr}
 
-Return JSON:
+OUTPUT:
+${result.stdout || "(no output)"}
+${result.stderr ? `ERRORS:\n${result.stderr}` : ""}
+
+Return ONLY valid JSON:
 {
-  "passed": true/false,
-  "message": "Short feedback message (e.g., 'Great job!' or 'You forgot to print the variable.')"
+  "passed": true or false,
+  "verdict": "short verdict line",
+  "emoji": "✅ or ❌ or ⚠️",
+  "explanation": "2-3 sentences. Specific, warm, reference their actual code.",
+  "codeQuality": "One tip to make it more Pythonic. Or praise if it's great.",
+  "encouragement": "Short motivational sentence relating to real Python use."
 }`;
 
     const ev = await callOpenRouter(evalPrompt, model, true);
-    if (ev) setFeedback(ev);
-    setLoadState("");
+    if (ev) {
+      setFeedback(ev);
+      if (ev.passed) {
+        setStreak(s => s + 1);
+        setTotalSolved(n => n + 1);
+        setTasksDone(prev => ({ ...prev, [topicIdx]: Math.max(prev[topicIdx] || 0, taskNum) }));
+      } else {
+        setStreak(0);
+      }
+    }
+    setLoadRun(false);
+  };
+
+  const handleHint = () => {
+    if (hintLevel === 0) { setHint(task?.hint1); setHintLevel(1); }
+    else if (hintLevel === 1) { setHint(task?.hint2); setHintLevel(2); }
   };
 
   const handleNext = async () => {
     if (taskNum < 3) {
-      await generateTask(topicIdx, taskNum + 1, model);
-      setTaskNum(n => n + 1);
-    } else if (topicIdx < CURRICULUM.length - 1) {
-      setTopicIdx(i => i + 1);
-      setTaskNum(1);
-      await generateTask(topicIdx + 1, 1, model);
+      const n = taskNum + 1;
+      setTaskNum(n);
+      await generateTask(topicIdx, n, model);
+    } else {
+      const next = topicIdx + 1;
+      if (next < CURRICULUM.length) {
+        setCompletedTopics(prev => new Set([...prev, topicIdx]));
+        setTopicIdx(next);
+        setTaskNum(1);
+        await generateTask(next, 1, model);
+      }
     }
+  };
+
+  const handleTopicClick = async (idx) => {
+    const locked = idx > topicIdx && !completedTopics.has(idx);
+    if (locked || idx === topicIdx) { setSidebarOpen(false); return; }
+    setTopicIdx(idx);
+    setTaskNum(1);
+    setSidebarOpen(false);
+    await generateTask(idx, 1, model);
   };
 
   const handleTab = (e) => {
     if (e.key === "Tab") {
       e.preventDefault();
       const s = e.target.selectionStart, end = e.target.selectionEnd;
-      setCode(code.substring(0, s) + "    " + code.substring(end));
-      requestAnimationFrame(() => textareaRef.current.selectionStart = textareaRef.current.selectionEnd = s + 4);
+      const newCode = code.substring(0, s) + "    " + code.substring(end);
+      setCode(newCode);
+      requestAnimationFrame(() => {
+        if (textareaRef.current) {
+          textareaRef.current.selectionStart = textareaRef.current.selectionEnd = s + 4;
+        }
+      });
     }
   };
 
-  // Helper to render markdown-like backticks as <code> elements safely
-  const renderInstruction = (text) => {
-    const parts = text.split(/`([^`]+)`/g);
-    return parts.map((part, i) => i % 2 === 1 ? <code key={i}>{part}</code> : part);
-  };
+  const cur = CURRICULUM[topicIdx];
 
   return (
-    <div style={{ display: "flex", height: "100vh", overflow: "hidden", background: "#f8fafc" }}>
-      
-      {/* Sidebar Overlay */}
+    <div style={{ display: "flex", height: "100vh", fontFamily: "'JetBrains Mono', monospace", background: "#0d1117", color: "#c9d1d9", overflow: "hidden" }}>
+
+      {/* Mobile overlay */}
       <div className={`sidebar-overlay ${sidebarOpen ? "open" : ""}`} onClick={() => setSidebarOpen(false)} />
 
       {/* Sidebar */}
-      <div className={`sidebar ${sidebarOpen ? "open" : ""}`}>
-        <div style={{ padding: "16px", borderBottom: "1px solid #e2e8f0", background: "#f8fafc" }}>
-          <h2 style={{ fontSize: 18, color: "#0f172a", margin: 0 }}>Menu</h2>
+      <div className={`sidebar ${sidebarOpen ? "open" : ""}`} style={{ width: 240, background: "#161b22", borderRight: "1px solid #21262d", display: "flex", flexDirection: "column", overflow: "hidden", flexShrink: 0 }}>
+        <div style={{ padding: "14px 16px", borderBottom: "1px solid #21262d", display: "flex", alignItems: "center", gap: 10 }}>
+          <span style={{ fontSize: 22 }}>🐍</span>
+          <span style={{ fontSize: 17, fontWeight: 700, background: "linear-gradient(135deg, #4ade80, #60a5fa)", WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent" }}>PyTeach AI</span>
         </div>
-        <div style={{ padding: "16px", flex: 1, overflowY: "auto" }}>
-          <div style={{ fontSize: 12, fontWeight: 700, color: "#64748b", textTransform: "uppercase", marginBottom: 12 }}>Curriculum</div>
-          {CURRICULUM.map((t, i) => (
-            <div key={i} 
-                 onClick={() => { setTopicIdx(i); setTaskNum(1); setSidebarOpen(false); generateTask(i, 1, model); }}
-                 style={{ padding: "10px 12px", borderRadius: 8, cursor: "pointer", marginBottom: 4, background: topicIdx === i ? "#eff6ff" : "transparent", color: topicIdx === i ? "#2563eb" : "#475569", fontWeight: topicIdx === i ? 600 : 400 }}>
-              {i + 1}. {t.topic}
-            </div>
-          ))}
+        <div style={{ flex: 1, overflowY: "auto", padding: "6px 0" }}>
+          {CURRICULUM.map((t, i) => {
+            const done = completedTopics.has(i) || (tasksDone[i] >= 3);
+            const active = i === topicIdx;
+            const locked = i > topicIdx && !completedTopics.has(i);
+            return (
+              <div key={i} onClick={() => handleTopicClick(i)}
+                style={{ display: "flex", alignItems: "center", gap: 10, padding: "9px 16px", cursor: locked ? "not-allowed" : "pointer", background: active ? "#1f2937" : "transparent", borderLeft: active ? `2px solid ${t.color}` : "2px solid transparent", opacity: locked ? 0.4 : 1, transition: "background 0.15s" }}>
+                <span style={{ fontSize: 15, width: 22, textAlign: "center" }}>{t.icon}</span>
+                <div style={{ flex: 1, minWidth: 0 }}>
+                  <div style={{ fontSize: 12, fontWeight: active ? 600 : 400, color: active ? "#f0f6ff" : "#8b949e", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{t.topic}</div>
+                  <div style={{ fontSize: 10, color: "#6e7681", marginTop: 1 }}>{t.desc}</div>
+                </div>
+                {done ? (
+                  <div style={{ width: 16, height: 16, borderRadius: "50%", background: t.color, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 9, color: "#000", fontWeight: 700, flexShrink: 0 }}>✓</div>
+                ) : active ? (
+                  <div style={{ width: 6, height: 6, borderRadius: "50%", background: t.color, flexShrink: 0 }} />
+                ) : locked ? (
+                  <span style={{ fontSize: 10 }}>🔒</span>
+                ) : null}
+              </div>
+            );
+          })}
+        </div>
+        <div style={{ padding: "10px 16px", borderTop: "1px solid #21262d", display: "flex", gap: 14, fontSize: 11, color: "#8b949e" }}>
+          <span>🔥 {streak} streak</span>
+          <span>✅ {totalSolved} solved</span>
         </div>
       </div>
 
-      {/* Main Content */}
-      <div style={{ flex: 1, display: "flex", flexDirection: "column", minWidth: 0, height: "100%" }}>
-        
-        {/* Top Navbar */}
-        <div style={{ height: 50, background: "#1e1e1e", display: "flex", alignItems: "center", padding: "0 12px", gap: 12, flexShrink: 0, borderBottom: "1px solid #333" }}>
-          <button onClick={() => setSidebarOpen(true)} style={{ background: "transparent", color: "#fff", fontSize: 20 }}>☰</button>
-          
-          {/* Fake Tabs for aesthetics */}
-          <div style={{ display: "flex", background: "#ffffff", borderRadius: 6, overflow: "hidden", marginLeft: "auto", marginRight: "auto" }}>
-            <div style={{ padding: "4px 12px", fontSize: 13, fontWeight: 600, background: "#ffffff", color: "#0f172a", borderRight: "1px solid #e2e8f0" }}>Exercise</div>
-            <div style={{ padding: "4px 12px", fontSize: 13, fontWeight: 600, background: "#1e293b", color: "#ffffff", borderRight: "1px solid #334155" }}>Code</div>
-            <div style={{ padding: "4px 12px", fontSize: 13, fontWeight: 600, background: "#ffffff", color: "#0f172a" }}>Shell</div>
-          </div>
+      {/* Main */}
+      <div style={{ flex: 1, display: "flex", flexDirection: "column", overflow: "hidden", minWidth: 0 }}>
 
-          <select value={model} onChange={e => { setModel(e.target.value); generateTask(topicIdx, taskNum, e.target.value); }}
-            style={{ background: "#2d2d2d", color: "#fff", border: "none", borderRadius: 4, padding: "4px 8px", fontSize: 11 }}>
-            <option value="openai/gpt-4o-mini">GPT-4o Mini</option>
-            <option value="google/gemini-flash-1.5">Gemini Flash</option>
-            <option value="anthropic/claude-3-haiku">Claude Haiku</option>
-          </select>
+        {/* Topbar */}
+        <div style={{ padding: "10px 16px", borderBottom: "1px solid #21262d", display: "flex", alignItems: "center", gap: 12, background: "#161b22", flexShrink: 0 }}>
+          <button className="menu-btn" onClick={() => setSidebarOpen(true)}>☰</button>
+          <div style={{ display: "flex", alignItems: "center", gap: 8, flex: 1, minWidth: 0 }}>
+            <span style={{ fontSize: 16 }}>{cur.icon}</span>
+            <span style={{ fontSize: 13, fontWeight: 600, color: cur.color, whiteSpace: "nowrap" }}>{cur.topic}</span>
+            <span style={{ color: "#30363d" }}>·</span>
+            <span style={{ fontSize: 12, color: "#8b949e" }}>Task {taskNum}/3</span>
+          </div>
+          <div style={{ display: "flex", gap: 5, alignItems: "center", flexShrink: 0 }}>
+            {[1,2,3].map(n => (
+              <div key={n} style={{ width: n === taskNum ? 20 : 7, height: 7, borderRadius: 4, background: (n < taskNum || (n === taskNum && feedback?.passed)) ? cur.color : n === taskNum ? `${cur.color}88` : "#21262d", transition: "all 0.3s" }} />
+            ))}
+          </div>
         </div>
 
-        {/* Instructions Panel (Collapsible) */}
-        <div style={{ background: "#161b28", color: "#ffffff", flexShrink: 0, display: "flex", flexDirection: "column", transition: "height 0.2s" }}>
-          <div style={{ padding: "12px 16px", display: "flex", justifyContent: "space-between", alignItems: "center", borderBottom: instOpen ? "1px solid #2d3748" : "none" }}>
-            <h3 style={{ fontSize: 16, margin: 0, fontWeight: 600 }}>Instructions</h3>
-            <button onClick={() => setInstOpen(!instOpen)} style={{ background: "transparent", color: "#94a3b8", fontSize: 14 }}>
-              {instOpen ? "hide \u2212" : "show \u002B"}
-            </button>
-          </div>
-          
-          {instOpen && (
-            <div className="fade-in" style={{ padding: "16px", fontSize: 14, lineHeight: 1.6 }}>
-              {loadState === "task" ? (
-                <div style={{ color: "#94a3b8" }}>Loading task...</div>
-              ) : (
-                <ul style={{ paddingLeft: 20, margin: 0, color: "#f1f5f9" }}>
-                  {task?.instructions?.map((inst, i) => (
-                    <li key={i} style={{ marginBottom: 12 }}>{renderInstruction(inst)}</li>
-                  ))}
-                </ul>
+        {/* Scrollable Content */}
+        <div style={{ flex: 1, overflowY: "auto", padding: "16px", display: "flex", flexDirection: "column", gap: 14 }}>
+
+          {/* Task Card */}
+          {loadTask ? (
+            <div style={{ background: "#161b22", border: "1px solid #21262d", borderRadius: 12, padding: 20 }}>
+              <SkeletonLine w="35%" h={10} mb={14} />
+              <SkeletonLine w="50%" h={18} mb={14} />
+              <SkeletonLine h={13} mb={8} />
+              <SkeletonLine h={13} mb={8} w="85%" />
+              <SkeletonLine h={70} mb={0} />
+            </div>
+          ) : task && (
+            <div className="fade-in" style={{ background: "#161b22", border: `1px solid ${cur.color}33`, borderRadius: 12, padding: 20, position: "relative", overflow: "hidden" }}>
+              <div style={{ position: "absolute", top: 0, left: 0, right: 0, height: 2, background: `linear-gradient(90deg, transparent, ${cur.color}, transparent)` }} />
+              <div style={{ display: "inline-flex", alignItems: "center", gap: 5, padding: "3px 10px", background: `${cur.color}22`, border: `1px solid ${cur.color}55`, borderRadius: 100, fontSize: 11, color: cur.color, fontWeight: 600, marginBottom: 10 }}>
+                ⚡ {task.conceptBadge}
+              </div>
+              {task.conceptExplanation && (
+                <div style={{ fontSize: 12, color: "#8b949e", marginBottom: 10, fontStyle: "italic" }}>💡 {task.conceptExplanation}</div>
+              )}
+              <div style={{ fontSize: 15, fontWeight: 700, color: "#f0f6ff", marginBottom: 10 }}>{task.title}</div>
+              <div style={{ fontSize: 13, color: "#c9d1d9", lineHeight: 1.75, marginBottom: 12 }}>{task.description}</div>
+              {task.example && (
+                <div style={{ background: "#0d1117", border: "1px solid #21262d", borderRadius: 8, padding: "10px 14px", fontSize: 12, color: "#8b949e", whiteSpace: "pre-wrap", lineHeight: 1.7 }}>{task.example}</div>
               )}
             </div>
           )}
-        </div>
 
-        {/* Code Editor Area */}
-        <div style={{ flex: 1, background: "#ffffff", display: "flex", flexDirection: "column", position: "relative" }}>
-          <textarea
-            ref={textareaRef}
-            value={code}
-            onChange={e => setCode(e.target.value)}
-            onKeyDown={handleTab}
-            spellCheck={false}
-            style={{ flex: 1, width: "100%", padding: "16px", border: "none", resize: "none", fontSize: 15, lineHeight: 1.5, color: "#1e293b", outline: "none" }}
-            placeholder="Write your code here..."
-          />
-          
-          {/* Output / Console Sliding Panel */}
-          {consoleOpen && (
-            <div className="fade-in" style={{ height: "40%", borderTop: "2px solid #e2e8f0", background: "#f8fafc", display: "flex", flexDirection: "column", position: "absolute", bottom: 0, left: 0, right: 0 }}>
-              <div style={{ padding: "8px 16px", background: "#e2e8f0", display: "flex", justifyContent: "space-between", alignItems: "center", fontSize: 12, fontWeight: 600, color: "#475569" }}>
-                <span>Console Output</span>
-                <button onClick={() => setConsoleOpen(false)} style={{ background: "transparent", fontSize: 16, color: "#64748b" }}>×</button>
+          {/* Editor */}
+          {!loadTask && task && (
+            <div className="fade-in" style={{ background: "#161b22", border: "1px solid #21262d", borderRadius: 12, overflow: "hidden" }}>
+              <div style={{ padding: "7px 14px", background: "#1c2128", borderBottom: "1px solid #21262d", display: "flex", alignItems: "center", justifyContent: "space-between", fontSize: 11, color: "#8b949e" }}>
+                <div style={{ display: "flex", gap: 6 }}>
+                  <div style={{ width: 10, height: 10, borderRadius: "50%", background: "#ff5f57" }} />
+                  <div style={{ width: 10, height: 10, borderRadius: "50%", background: "#febc2e" }} />
+                  <div style={{ width: 10, height: 10, borderRadius: "50%", background: "#28c840" }} />
+                </div>
+                <span>solution.py</span>
+                <span>Python 3.10</span>
               </div>
-              <pre style={{ flex: 1, padding: "12px 16px", margin: 0, overflowY: "auto", fontFamily: "'Fira Code', monospace", fontSize: 13, color: output?.stderr ? "#ef4444" : "#0f172a" }}>
-                {output?.stderr || output?.stdout || "No output"}
+              <textarea
+                ref={textareaRef}
+                value={code}
+                onChange={e => setCode(e.target.value)}
+                onKeyDown={handleTab}
+                spellCheck={false}
+                autoCapitalize="none"
+                autoCorrect="off"
+                style={{ width: "100%", minHeight: 160, background: "#0d1117", color: "#c9d1d9", border: "none", outline: "none", resize: "vertical", fontSize: 13, lineHeight: 1.8, padding: "14px 16px", caretColor: cur.color }}
+              />
+              <div style={{ padding: "9px 14px", background: "#1c2128", borderTop: "1px solid #21262d", display: "flex", gap: 8, flexWrap: "wrap", alignItems: "center" }}>
+                <button onClick={handleRun} disabled={loadRun}
+                  style={{ display: "flex", alignItems: "center", gap: 6, padding: "8px 16px", background: loadRun ? "#1f2937" : "linear-gradient(135deg, #22c55e, #16a34a)", border: "none", borderRadius: 8, color: loadRun ? "#6b7280" : "#fff", fontSize: 13, fontWeight: 600 }}>
+                  {loadRun ? "⏳ Running..." : "▶ Run & Check"}
+                </button>
+                <button onClick={handleHint} disabled={hintLevel >= 2}
+                  style={{ display: "flex", alignItems: "center", gap: 6, padding: "8px 12px", background: "transparent", border: "1px solid #30363d", borderRadius: 8, color: hintLevel >= 2 ? "#4b5563" : "#8b949e", fontSize: 13 }}>
+                  {hintLevel >= 2 ? "🪫 No more hints" : hintLevel === 1 ? "💡 Bigger Hint" : "💡 Hint"}
+                </button>
+
+                {/* 20 OpenRouter Models Selector */}
+                <div style={{ marginLeft: "auto", display: "flex", alignItems: "center", gap: 8 }}>
+                  <select 
+                    value={model} 
+                    onChange={handleModelChange}
+                    style={{ padding: "8px 12px", background: "#161b22", border: "1px solid #30363d", borderRadius: 8, color: "#c9d1d9", fontSize: 12 }}
+                  >
+                    <optgroup label="OpenAI">
+                      <option value="openai/gpt-4o-mini">GPT-4o Mini</option>
+                      <option value="openai/gpt-4o">GPT-4o</option>
+                      <option value="openai/gpt-3.5-turbo">GPT-3.5 Turbo</option>
+                    </optgroup>
+                    <optgroup label="Anthropic">
+                      <option value="anthropic/claude-3.5-sonnet">Claude 3.5 Sonnet</option>
+                      <option value="anthropic/claude-3-haiku">Claude 3 Haiku</option>
+                      <option value="anthropic/claude-3-opus">Claude 3 Opus</option>
+                    </optgroup>
+                    <optgroup label="Google">
+                      <option value="google/gemini-flash-1.5">Gemini 1.5 Flash</option>
+                      <option value="google/gemini-pro-1.5">Gemini 1.5 Pro</option>
+                      <option value="google/gemma-2-9b-it">Gemma 2 9B</option>
+                    </optgroup>
+                    <optgroup label="Meta">
+                      <option value="meta-llama/llama-3.1-8b-instruct">Llama 3.1 8B</option>
+                      <option value="meta-llama/llama-3.1-70b-instruct">Llama 3.1 70B</option>
+                      <option value="meta-llama/llama-3-8b-instruct">Llama 3 8B</option>
+                      <option value="meta-llama/llama-3-70b-instruct">Llama 3 70B</option>
+                    </optgroup>
+                    <optgroup label="Mistral & Cohere">
+                      <option value="mistralai/mistral-7b-instruct">Mistral 7B</option>
+                      <option value="mistralai/mixtral-8x7b-instruct">Mixtral 8x7B</option>
+                      <option value="cohere/command-r">Command R</option>
+                      <option value="cohere/command-r-plus">Command R+</option>
+                    </optgroup>
+                    <optgroup label="Other Open Weights">
+                      <option value="qwen/qwen-2-72b-instruct">Qwen 2 72B</option>
+                      <option value="microsoft/wizardlm-2-8x22b">WizardLM 2 8x22B</option>
+                      <option value="microsoft/phi-3-mini-128k-instruct">Phi-3 Mini 128k</option>
+                    </optgroup>
+                  </select>
+                  <button onClick={() => { setCode(task.starterCode || ""); setOutput(null); setFeedback(null); setHint(null); setHintLevel(0); }}
+                    style={{ padding: "8px 12px", background: "transparent", border: "1px solid #30363d", borderRadius: 8, color: "#8b949e", fontSize: 13 }}>
+                    ↺ Reset
+                  </button>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* Hint */}
+          {hint && (
+            <div className="fade-in" style={{ background: "#1a1500", border: "1px solid #fbbf2444", borderRadius: 12, padding: "14px 16px", fontSize: 13, color: "#fde68a", lineHeight: 1.7, display: "flex", gap: 10 }}>
+              <span>💡</span><span>{hint}</span>
+            </div>
+          )}
+
+          {/* Output */}
+          {output && (
+            <div className="fade-in" style={{ background: "#0d1117", border: `1px solid ${output.stderr ? "#f8714433" : "#21262d"}`, borderRadius: 12, overflow: "hidden" }}>
+              <div style={{ padding: "6px 14px", background: output.stderr ? "#1a0f0f" : "#161b22", borderBottom: `1px solid ${output.stderr ? "#f8714433" : "#21262d"}`, fontSize: 11, color: output.stderr ? "#f87171" : "#8b949e", display: "flex", alignItems: "center", gap: 6 }}>
+                {output.stderr ? "⚠ Error" : "✦ Output"}
+              </div>
+              <pre style={{ padding: "12px 16px", fontSize: 12, lineHeight: 1.8, whiteSpace: "pre-wrap", fontFamily: "inherit", color: "#c9d1d9", margin: 0 }}>
+                {output.stderr || output.stdout || "(no output)"}
               </pre>
             </div>
           )}
-        </div>
 
-        {/* Feedback Banner (Shows above bottom bar when submitted) */}
-        {feedback && (
-          <div className="fade-in" style={{ background: feedback.passed ? "#dcfce7" : "#fee2e2", padding: "12px 16px", borderTop: `1px solid ${feedback.passed ? "#bbf7d0" : "#fecaca"}`, display: "flex", justifyContent: "space-between", alignItems: "center", flexShrink: 0 }}>
-            <div style={{ fontSize: 14, color: feedback.passed ? "#166534" : "#991b1b", fontWeight: 500 }}>
-              {feedback.passed ? "✅ " : "❌ "}{feedback.message}
+          {/* Feedback */}
+          {feedback && (
+            <div className="fade-in" style={{ background: feedback.passed ? "#0a1f12" : "#1a0d0d", border: `1px solid ${feedback.passed ? "#22c55e44" : "#ef444444"}`, borderRadius: 12, padding: 20 }}>
+              <div style={{ fontSize: 17, fontWeight: 700, color: feedback.passed ? "#4ade80" : "#f87171", marginBottom: 10, display: "flex", alignItems: "center", gap: 8 }}>
+                <span>{feedback.emoji}</span><span>{feedback.verdict}</span>
+              </div>
+              <div style={{ fontSize: 13, color: "#c9d1d9", lineHeight: 1.75, marginBottom: 10 }}>{feedback.explanation}</div>
+              {feedback.codeQuality && (
+                <div style={{ background: "#1f2937", border: "1px solid #30363d", borderRadius: 8, padding: "8px 12px", fontSize: 12, color: "#60a5fa", marginBottom: 10, display: "flex", gap: 6 }}>
+                  <span>🔵</span><span>{feedback.codeQuality}</span>
+                </div>
+              )}
+              <div style={{ fontSize: 12, color: "#8b949e", fontStyle: "italic", marginBottom: feedback.passed ? 14 : 0 }}>{feedback.encouragement}</div>
+              {feedback.passed && (
+                <button onClick={handleNext}
+                  style={{ display: "inline-flex", alignItems: "center", gap: 6, padding: "10px 18px", background: "linear-gradient(135deg, #3b82f6, #2563eb)", border: "none", borderRadius: 8, color: "#fff", fontSize: 13, fontWeight: 600 }}>
+                  {taskNum < 3 ? `Next Task (${taskNum + 1}/3) →` : topicIdx < CURRICULUM.length - 1 ? `Next Topic: ${CURRICULUM[topicIdx + 1].topic} →` : "🎉 You completed Python!"}
+                </button>
+              )}
             </div>
-            {feedback.passed && (
-              <button onClick={handleNext} style={{ background: "#22c55e", color: "#fff", padding: "6px 12px", borderRadius: 4, fontSize: 13, fontWeight: 600 }}>Next Exercise ➔</button>
-            )}
-          </div>
-        )}
+          )}
 
-        {/* Bottom Action Bar */}
-        <div style={{ height: 60, background: "#f1f5f9", borderTop: "1px solid #e2e8f0", display: "flex", alignItems: "center", padding: "0 16px", gap: 12, flexShrink: 0 }}>
-          
-          <button onClick={() => alert(task?.hint || "No hint available.")} 
-                  style={{ width: 36, height: 36, borderRadius: "50%", background: "#e2e8f0", color: "#475569", fontWeight: 700, fontSize: 16, display: "flex", alignItems: "center", justifyContent: "center" }}>
-            ?
-          </button>
-
-          <button onClick={handleRun} disabled={!!loadState}
-                  style={{ padding: "10px 24px", borderRadius: 30, background: "#e2e8f0", color: "#0f172a", fontWeight: 600, fontSize: 14, marginLeft: "auto" }}>
-            {loadState === "run" ? "Running..." : "Run"}
-          </button>
-          
-          <button onClick={handleSubmit} disabled={!!loadState}
-                  style={{ padding: "10px 24px", borderRadius: 30, background: "#22c55e", color: "#ffffff", fontWeight: 600, fontSize: 14 }}>
-            {loadState === "submit" ? "Checking..." : "Submit"}
-          </button>
+          <div style={{ height: 16 }} />
         </div>
-
       </div>
     </div>
   );
